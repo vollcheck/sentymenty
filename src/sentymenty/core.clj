@@ -1,6 +1,7 @@
 (ns sentymenty.core
   (:require
    [clojure.string :as str]
+   [clojure.java.io :as io]
    [clj-http.client :as http-client]))
 
 (def API_KEY
@@ -9,14 +10,18 @@
 
 (def comments-api-url
   (str "https://www.googleapis.com/youtube/v3/commentThreads"
-       "?part=snippet%2Creplies"
-       "&maxResults=100&"
+       ;; "?part=snippet%2Creplies"
+       "?part=snippet,replies"
+       "&maxResults=100"
        "&key=" API_KEY
-       "&videoId=" "plNJOq9pMnY"
-       "&pageToken="))
+       "&videoId=%s"
+       "&pageToken=%s"))
 
-(defn api-call [page-token]
-  (let [url (str comments-api-url page-token)]
+(def negative-video-id "plNJOq9pMnY")
+(def positive-video-id "2DiP0mMeaT8")
+
+(defn api-call [video-id page-token]
+  (let [url (format comments-api-url video-id page-token)]
     ;; TODO use conn manager
     (http-client/get url {:accept :json
                           :as :json
@@ -39,27 +44,35 @@
               (conj acc top-level))))
         [])))
 
+(defn fetch-comments
+  "General abstraction for handling with paged API responses"
+  [video-id]
+  (into []
+        conj
+        (iteration (partial api-call video-id)
+                   {:somef #(= 200 (:status %))
+                    :vf extract-comments
+                    :kf #(get-in % [:body :nextPageToken])
+                    :initk ""})))
+
 (defn dump-sentences [filename content]
-  (with-open [w (clojure.java.io/writer filename)]
+  (with-open [w (io/writer filename)]
     (binding [*out* w]
       (doseq [line content]
         (.write w (str line "\n"))))))
 
+(defn clean-comments [comments]
+  (->> comments
+       (flatten)
+       (filter string?)))
+
+(def negative-video-comments
+    (clean-comments (fetch-comments negative-video-id)))
+
+(def positive-video-comments
+  (clean-comments (fetch-comments positive-video-id)))
+
 (comment
-  (def r
-    (into []
-          conj
-          (iteration api-call {:somef #(= 200 (:status %))
-                               :vf extract-comments
-                               :kf #(get-in % [:body :nextPageToken])
-                               :initk ""
-                               }))
-    )
-
-  (def rr
-    (->> (flatten r)
-         (filter string?)))
-
-  (dump-sentences "resources/negative-sentiment.txt" rr)
-
+  (dump-sentences "resources/negative-sentiment.txt" negative-video-comments)
+  (dump-sentences "resources/positive-sentiment.txt" positive-video-comments)
   )

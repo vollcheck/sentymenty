@@ -9,8 +9,8 @@ and second with "good vibes" music
 ### negative(?) sentiment video
 https://www.youtube.com/watch?v=plNJOq9pMnY&ab_channel=FAMEMMA
 ### positive(?) sentiment video
-
-... TBC
+https://www.youtube.com/watch?v=2DiP0mMeaT8&ab_channel=DawidPodsiad%C5%82o
+;; https://www.youtube.com/watch?v=1Pg1RguhqxY&ab_channel=ememusicVEVO
 
 ## usage
 
