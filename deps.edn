@@ -10,4 +10,6 @@
 
         ;; statistical analysis
         kixi/stats {:mvn/version "0.5.5"}
+
+        io.github.nextjournal/clerk {:mvn/version "0.13.842"}
         }}
